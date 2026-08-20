@@ -7,7 +7,7 @@
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Warn a user with optional reason"
+              "text": "Use this in the group as an administrator."
             }
           }
         ],

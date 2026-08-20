@@ -1,0 +1,11 @@
+[
+  {
+    "name": "a new group member receives a verification challenge",
+    "steps": [
+      {
+        "send": { "update": { "update_id": 1, "message": { "message_id": 1, "date": 1, "chat": { "id": -100, "type": "group", "title": "Group" }, "from": { "id": 1, "is_bot": false, "first_name": "Admin" }, "new_chat_members": [{ "id": 2, "is_bot": false, "first_name": "New member" }] } } },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Welcome. Complete verification to participate.\nNo spam, repeated messages, or unsolicited links.\n\nTo verify, tap the answer: 7 + 5 =" } }]
+      }
+    ]
+  }
+]

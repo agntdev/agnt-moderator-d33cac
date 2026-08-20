@@ -7,7 +7,7 @@
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Remove a user from the group"
+              "text": "Use this in the group as an administrator."
             }
           }
         ],

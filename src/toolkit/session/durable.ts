@@ -14,6 +14,7 @@
  */
 
 import type { StorageAdapter } from "grammy";
+import { now } from "../clock.js";
 
 // Minimal shapes so this file type-checks without pulling @cloudflare/workers-types
 // into the Node build. The real bindings are provided by the Workers runtime.
@@ -43,6 +44,7 @@ export interface WorkerEnv {
   BOT_TELEMETRY_URL?: string;
   BOT_TELEMETRY_SECRET?: string;
   BOT_TELEMETRY_SALT?: string;
+  ADMIN_CHAT_ID?: string;
 }
 
 interface Reminder {
@@ -144,6 +146,27 @@ export class ChatDO {
       }
     }
 
+    // Durable, per-group domain records. Feature handlers use this endpoint for
+    // moderation data rather than session state: sessions are disposable while
+    // warnings, members, settings, and audit logs must survive a restart.
+    if (url.pathname === "/moderation") {
+      if (request.method === "GET") {
+        return Response.json((await this.state.storage.get<unknown>("moderation")) ?? {});
+      }
+      if (request.method === "PUT") {
+        await this.state.storage.put("moderation", await request.json());
+        const chatId = url.searchParams.get("chat");
+        if (chatId) await this.state.storage.put("moderationChatId", chatId);
+        // A per-group Durable Object gives us a durable daily schedule without
+        // scanning a global keyspace. The next alarm also considers reminders.
+        const nextSummary = now() + 24 * 60 * 60 * 1000;
+        await this.state.storage.put("moderationSummaryAt", nextSummary);
+        const existing = await this.state.storage.getAlarm();
+        if (existing === null || nextSummary < existing) await this.state.storage.setAlarm(nextSummary);
+        return Response.json({ ok: true });
+      }
+    }
+
     // Schedule a reminder + (re)arm the alarm to the earliest due one.
     if (url.pathname === "/remind" && request.method === "POST") {
       const rem = (await request.json()) as Reminder;
@@ -160,15 +183,31 @@ export class ChatDO {
   // Fires at the earliest reminder's wall-clock time. Sends every due reminder,
   // drops them, and re-arms for whatever remains.
   async alarm(): Promise<void> {
-    const now = Date.now();
+    const currentTime = now();
     const list = (await this.state.storage.get<Reminder[]>("reminders")) ?? [];
-    const due = list.filter((r) => r.at <= now);
-    const rest = list.filter((r) => r.at > now);
+    const due = list.filter((r) => r.at <= currentTime);
+    const rest = list.filter((r) => r.at > currentTime);
     for (const r of due) {
       await tg(this.env.BOT_TOKEN, "sendMessage", { chat_id: r.chatId, text: r.text });
     }
+    const summaryAt = await this.state.storage.get<number>("moderationSummaryAt");
+    if (summaryAt !== undefined && summaryAt <= currentTime) {
+      const data = await this.state.storage.get<{ members?: Record<string, { verification: string }>; logs?: unknown[] }>("moderation");
+      const members = Object.values(data?.members ?? {});
+      const verified = members.filter((m) => m.verification === "verified").length;
+      const removed = members.filter((m) => m.verification === "removed").length;
+      if (this.env.ADMIN_CHAT_ID) {
+        try { await tg(this.env.BOT_TOKEN, "sendMessage", { chat_id: this.env.ADMIN_CHAT_ID, text: `Daily moderation summary:\nVerified members: ${verified}\nVerification removals: ${removed}\nActions logged: ${(data?.logs ?? []).length}` }); } catch { /* A blocked owner must not prevent the next schedule. */ }
+      }
+      await this.state.storage.put("moderationSummaryAt", currentTime + 24 * 60 * 60 * 1000);
+    }
     await this.state.storage.put("reminders", rest);
     await this.rearm(rest);
+    const nextSummary = await this.state.storage.get<number>("moderationSummaryAt");
+    const armed = await this.state.storage.getAlarm();
+    if (nextSummary !== undefined && (armed === null || nextSummary < armed)) {
+      await this.state.storage.setAlarm(nextSummary);
+    }
   }
 
   private async rearm(list: Reminder[]): Promise<void> {

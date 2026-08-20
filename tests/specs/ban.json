@@ -7,7 +7,7 @@
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Permanently ban a user"
+              "text": "Use this in the group as an administrator."
             }
           }
         ],

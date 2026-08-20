@@ -7,7 +7,7 @@
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Mute a user with optional duration"
+              "text": "Use this in the group as an administrator."
             }
           }
         ],
