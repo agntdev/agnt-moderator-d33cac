@@ -1,0 +1,20 @@
+[
+  {
+    "name": "/mute",
+    "steps": [
+      {
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Mute a user with optional duration"
+            }
+          }
+        ],
+        "send": {
+          "text": "/mute"
+        }
+      }
+    ]
+  }
+]
