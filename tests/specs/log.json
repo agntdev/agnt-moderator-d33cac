@@ -7,7 +7,7 @@
           {
             "method": "sendMessage",
             "payload": {
-              "text": "View recent moderation log entries"
+              "text": "Owner access isn't set up yet."
             }
           }
         ],

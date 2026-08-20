@@ -1,0 +1,11 @@
+[
+  {
+    "name": "owner settings commands are protected when owner access is unset",
+    "steps": [
+      { "send": { "text": "/setwelcome Hello" }, "expect": [{ "method": "sendMessage", "payload": { "text": "Owner access isn't set up yet." } }] },
+      { "send": { "text": "/setrules Be kind" }, "expect": [{ "method": "sendMessage", "payload": { "text": "Owner access isn't set up yet." } }] },
+      { "send": { "text": "/setthresholds 3 6" }, "expect": [{ "method": "sendMessage", "payload": { "text": "Owner access isn't set up yet." } }] },
+      { "send": { "text": "/setactionchain mute" }, "expect": [{ "method": "sendMessage", "payload": { "text": "Owner access isn't set up yet." } }] }
+    ]
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {
+    "name": "/untrust requires an administrator in the group",
+    "steps": [
+      { "send": { "text": "/untrust" }, "expect": [{ "method": "sendMessage", "payload": { "text": "Use this in the group as an administrator." } }] }
+    ]
+  }
+]

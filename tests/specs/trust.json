@@ -7,7 +7,7 @@
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Mark user as trusted (exempt from rules)"
+              "text": "Use this in the group as an administrator."
             }
           }
         ],

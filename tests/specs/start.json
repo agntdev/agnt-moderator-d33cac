@@ -7,7 +7,7 @@
         "expect": [
           {
             "method": "sendMessage",
-            "payload": { "text": "👋 Welcome! Tap a button below to get started." }
+            "payload": { "text": "🛡 GroupGuard keeps your group clear and controlled.\nTap a button to manage moderation." }
           }
         ]
       }
